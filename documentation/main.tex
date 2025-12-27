@@ -9,7 +9,7 @@
 \newcommand{\sixte}{\textit{SIXTE}\xspace}
 \newcommand{\sixtesim}{\textit{sixtesim}\xspace}
 
-\title{SIXTE: Docoding the XGIS mask}
+\title{SIXTE: Decoding the XGIS mask}
 \author{Philipp Thalhammer}
 \date{\today}
 
@@ -93,7 +93,7 @@ Here the matrix $G$ corresponds to the mask pattern rescaled to provide a correc
 \begin{equation}
     S = \mathcal{F}^{-1} \left( \mathcal{F} \left( G \right) \cdot \mathcal{F} \left( D \right) \right)
 \end{equation}  
-For a exhaustive overview of the deconvolution algorithm, we refer to \citet[][and references therein]{goldwurm2022}.
+For a exhaustive overview of the deconvolution algorithm, we refer to \citet{goldwurm2022} and references therein.
 \section{Implementation:}
 The implementation of the deconstruction algorithm is done in Python
 using common libraries such as \texttt{numpy} and \texttt{scipy} and can be called via \textit{deconvolve.py}. For more information \texttt{deconvolve.py --help} can be called. 
