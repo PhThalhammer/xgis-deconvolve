@@ -4,14 +4,14 @@
 %\usepackage{minted}
 \usepackage{listings, xcolor}
 \usepackage{caption}
-
+\usepackage{natbib}
 \newcommand{\xgis}{\textit{XGIS}\xspace}
 \newcommand{\sixte}{\textit{SIXTE}\xspace}
 \newcommand{\sixtesim}{\textit{sixtesim}\xspace}
 
 \title{SIXTE: Docoding the XGIS mask}
 \author{Philipp Thalhammer}
-\date{June 2025}
+\date{\today}
 
 \input{listings_setup}
 
@@ -23,8 +23,8 @@
 \section{Introduction}
 The upcoming THESEUS satellite will be equipped with two main
 high-energy X-ray and $\gamma$-ray detectors. One of which is the
-coded mask instrument \xgis. It is sensitive to both X-ray and $\gamma$-rays in the 2 keV--10 MeV range. It consists of a coded mask and a silicon
-drift detector layer. The most important parameters of the coded-mask and detector geometry are listed in Table \ref{tab:para}.
+coded mask instrument \xgis \citep{labanti2021a}. It is sensitive to both X-ray and $\gamma$-rays in the 2 keV--10 MeV range. It consists of a coded mask and a silicon
+drift detector layer. Some relevant geometrical parameters of the coded-mask and detector geometry are listed in Table \ref{tab:para}. In this document we will briefly outline the \sixte simulation setup for the \xgis detector in its current state and the deconvolution algorithm that is currently available for its output. This document also provides a brief tutorial on how to use the deconvolution script.
 
 \begin{figure}
 
@@ -91,8 +91,9 @@ This can be calculated by summation of element wise matrix multiplication.
 \end{equation}
 Here the matrix $G$ corresponds to the mask pattern rescaled to provide a correctly normalized devolution that is one average zero for an empty region of the sky. It is, however, much more computationally efficient to calculate the  convolution via a multiplication in Fourier space.
 \begin{equation}
-    S = \mathcal{F}^{-1} \left( \mathcal{F} \left( M \right) \cdot \mathcal{F} \left( D \right) \right)
-\end{equation}  ŝ
+    S = \mathcal{F}^{-1} \left( \mathcal{F} \left( G \right) \cdot \mathcal{F} \left( D \right) \right)
+\end{equation}  
+For a exhaustive overview of the deconvolution algorithm, we refer to \citet[][and references therein]{goldwurm2022}.
 \section{Implementation:}
 The implementation of the deconstruction algorithm is done in Python
 using common libraries such as \texttt{numpy} and \texttt{scipy} and can be called via \textit{deconvolve.py}. For more information \texttt{deconvolve.py --help} can be called. 
@@ -159,5 +160,10 @@ The tool \textit{deconvolve.py}  also generates light-curves and spectra for a s
 \includegraphics[width=0.49\textwidth]{imgs/spec.png}
 \caption{Light-curve and spectrum for a simulated GRB at the very beginning of a 10\,ks observation} \label{fig:lc_spec}
 \end{figure}
+
+\bibliographystyle{aa}
+\bibliography{bibliography}
+
+
 
 \end{document}

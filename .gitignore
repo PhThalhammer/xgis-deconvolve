@@ -1,5 +1,6 @@
 Analysis.tex
 *~
+*.ipynb
 *.pha
 *.png
 *.fits

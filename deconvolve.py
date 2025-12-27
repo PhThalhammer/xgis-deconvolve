@@ -57,6 +57,7 @@ Output Files:
     parser.add_argument('--rmf', dest='rmf', type=str, default=home+"/userdata/coded_mask/theseus-xgis/instruments/theseus-xgis/instdata/rmfgrid/xgis_x_theta_0_phi_0_sixte_20251029.rmf", help='Path to the RMF file.')
     parser.add_argument('--no_lc', dest='no_lc', action='store_true', help='Do not generate lightcurve.')
     parser.add_argument('--no_sp', dest='no_sp', action='store_true', help='Do not generate spectrum.')
+    parser.add_argument('--nbins', dest='nbins', default=100, help='Number of bins for the light-curve.')
          
     args = parser.parse_args()
 
@@ -122,8 +123,8 @@ Output Files:
     if not args.no_sp:
         # Generating a spectrum for each detector channel 
         # (make variable for higher resolution RMFs)
-        minPHA = 1
-        maxPHA = 57
+        minPHA = 0
+        maxPHA = 56
         e_edges = list(range(minPHA, maxPHA + 2, 1))  # ensure step >=1
 
         n_bins = max(len(e_edges) - 1, 1)
@@ -162,7 +163,7 @@ Output Files:
 
     # Generating a lightcurve
     if not args.no_lc:
-        nlc = 100
+        nlc = args.nbins
         emin = 0
         emax = 57
         minT = int(np.min(data['TIME']))

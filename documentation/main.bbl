@@ -1,0 +1,22 @@
+\begin{thebibliography}{2}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{Goldwurm \& Gros(2022)}]{goldwurm2022}
+Goldwurm, A. \& Gros, A. 2022, Coded {{Mask Instruments}} for {{Gamma-Ray
+  Astronomy}}, 15
+
+\bibitem[{Labanti {et~al.}(2021)Labanti, Amati, Frontera, Mereghetti,
+  {Gasent-Blesa}, Tenzer, Orleanski, Kuvvetli, Campana, Fuschino, Terenzi,
+  Virgilli, Morgante, Orlandini, Butler, Stephen, Auricchio, De~Rosa, Da~Ronco,
+  Evangelisti, Melchiorri, Squerzanti, Fiorini, Bertuccio, Mele, Gandola,
+  Malcovati, Grassi, Bellutti, Borghi, Ficorella, Picciotto, Zanini, Zorzi,
+  Demenev, Rashevskaya, Rachevski, Zampa, Vacchi, Zampa, Baldazzi, La~Rosa,
+  Sottile, Volpe, Winkler, Reglero, Connell, {Pinazo-Herrero},
+  {Navarro-Gonz{\'a}lez}, {Rodr{\'i}guez-Mart{\'i}nez}, {Castro-Tirado},
+  Santangelo, Hedderman, Lorenzi, Sarra, Pedersen, Tcherniak, Guidorzi, Rosati,
+  Trois, \& Piazzolla}]{labanti2021a}
+Labanti, C., Amati, L., Frontera, F., {et~al.} 2021, The {{X}}/{{Gamma-ray
+  Imaging Spectrometer}} ({{XGIS}}) on-Board {{THESEUS}}: Design, Main
+  Characteristics, and Concept of Operation
+
+\end{thebibliography}
