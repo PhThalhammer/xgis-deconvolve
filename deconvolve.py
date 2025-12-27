@@ -107,6 +107,7 @@ Output Files:
     write_img_file(args.outfile + "_sky.fits", np.flipud(sky), ra, dec);
 
     # Mark a source position 
+    # TODO add check wether source and pointing are less then 180 deg apart
     W = WCS(args.outfile + "_sky.fits")
     x,y = W.world_to_pixel_values(args.ra_src, args.dec_src)
     x = int(x)
@@ -138,6 +139,8 @@ Output Files:
             sky = recon(mask, im, weight)
             # handle NaNs in sky
             sky = np.nan_to_num(sky, nan=0.0)
+            # check if source is in fo
+            
             x_min = max(0, x - 10)                                                       
             x_max = min(sky.shape[1], x + 10) # Note: x is column (index 1)  
             y_min = max(0, y - 10)                                                       

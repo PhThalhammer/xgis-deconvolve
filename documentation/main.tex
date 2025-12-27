@@ -1,0 +1,163 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{xspace}
+%\usepackage{minted}
+\usepackage{listings, xcolor}
+\usepackage{caption}
+
+\newcommand{\xgis}{\textit{XGIS}\xspace}
+\newcommand{\sixte}{\textit{SIXTE}\xspace}
+\newcommand{\sixtesim}{\textit{sixtesim}\xspace}
+
+\title{SIXTE: Docoding the XGIS mask}
+\author{Philipp Thalhammer}
+\date{June 2025}
+
+\input{listings_setup}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Introduction}
+The upcoming THESEUS satellite will be equipped with two main
+high-energy X-ray and $\gamma$-ray detectors. One of which is the
+coded mask instrument \xgis. It is sensitive to both X-ray and $\gamma$-rays in the 2 keV--10 MeV range. It consists of a coded mask and a silicon
+drift detector layer. The most important parameters of the coded-mask and detector geometry are listed in Table \ref{tab:para}.
+
+\begin{figure}
+
+
+\begin{minipage}[b]{.45\linewidth}
+   \centering\includegraphics[width=1\textwidth]{imgs/xgis_detgeom.pdf}
+  \captionof{figure}{The layout of the \xgis detector as used by \sixte. } \label{geo}
+\end{minipage}\hspace{.1cm}
+\begin{minipage}[b]{.45\linewidth} \centering
+  \begin{tabular}{l c }
+    \hline
+    \multicolumn{2}{c}{Mask} \\
+    \hline
+    Width & 56.1\,cm \\
+    Mask distance &  63.0\,cm \\
+    Pixel width &  1\,mm\\
+    Resolution & 55x55  \\
+    Thickness & 1\,mm \\
+    Material  & Tungsten (W) \\
+    \hline
+    \multicolumn{2}{c}{Detector} \\
+    \hline
+    Total width & 45\,cm  \\
+    Pixel width &  0.5\,mm\\
+    Detector setup & 10x10 \\
+    Pixels per detector  & 8x8 \\
+    \hline
+  \end{tabular}   
+     \captionof{table}{Relevant parameters of the \xgis detector}\label{tab:para}
+\end{minipage}
+\end{figure}
+This document explains the deconstruction algorithm
+implemented as part of \sixte to recover the sky image from the shadow
+patter on the detector plane. The layout of the \xgis detector as used by \sixte is shown in Fig.\,\ref{geo}. It comprises $10\times 10$ individual detector modules with $8\times 8$ pixels each, with a 1\,mm gap between individual modules.
+\begin{figure}
+ 
+\end{figure}
+In the current version the \sixte version uses a simplified version of the absorption physics within the mask material - considering the mask geometrically thin and fully opaque below 150\,keV (the X-mode) and fully transparent above 150\,keV (the S-mode). The two energy ranges are therefore treated as separated detectors defined through different xml files.
+
+
+\section{The Projection:}
+To project a single photon form a position in the sky onto the detector
+the shadogram is shifted by 
+\begin{equation}
+  \delta x = d_{\mathrm{mask}} \tan \left( \delta \phi \right).
+\end{equation}
+Then a random x-/y-position on the mask is sampled and if his position
+corresponds to an open position on the mask, and lies on the detector, the
+impact position on the detector is forwarded to the following modules of \sixte.
+The photon energies are being sampled from according to the  $\phi$ and $\theta$
+dependent RMFs, while the off-axis effects generated from the mask effects are
+being accounted for via vignetting as derived from the off-axis ARFs. The
+detector readout is handled via the respective \sixte module for a SDD detector.
+
+
+\section{The Deprojection:}
+This results in each source throwing a shadow pattern on the detector
+- the so called shadowgram. Deconstruction of the original sky pattern
+requires to calculate the cross-correlation between the detector image and 
+the shifted mask pattern for each position  in the sky. 
+This can be calculated by summation of element wise matrix multiplication. 
+\begin{equation}
+    S = D * G = \sum_{ij}^{N_\mathrm{pix}} D_{k,l} G_{i+k,j+l}
+\end{equation}
+Here the matrix $G$ corresponds to the mask pattern rescaled to provide a correctly normalized devolution that is one average zero for an empty region of the sky. It is, however, much more computationally efficient to calculate the  convolution via a multiplication in Fourier space.
+\begin{equation}
+    S = \mathcal{F}^{-1} \left( \mathcal{F} \left( M \right) \cdot \mathcal{F} \left( D \right) \right)
+\end{equation}  ŝ
+\section{Implementation:}
+The implementation of the deconstruction algorithm is done in Python
+using common libraries such as \texttt{numpy} and \texttt{scipy} and can be called via \textit{deconvolve.py}. For more information \texttt{deconvolve.py --help} can be called. 
+
+\section{Example:}
+In the following we illustrate an example run including both the projection and the deprojection. Before a single off-axis source is defined in a respective simput file, the simulation is run via \sixtesim: 
+
+\begin{lstlisting}[language=bash]
+
+$SIXTE/bin/sixtesim \
+  XMLFile=${xmldir}/xgis-x.xml \
+  RA=0.0 Dec=0.0 \
+  Exposure=1000 \
+  Simput="${simputdir}/single_source.fits" \
+  Prefix="output/" \
+  EvtFile=test.fits \
+  Background=y \
+  clobber=y 
+
+\end{lstlisting}
+
+As the detector array of \xgis consists of $10\times 10$ individual detector arrays, \sixte will provide an event-file for each individual detector. As a user this is likely inconvenient, and it is therefore recommended merging individual event-files by running a script similar to the following:
+\begin{lstlisting}[language=bash]
+ls   test*.fits > evts.lst  
+fmerge  infiles=@evts.lst  \ 
+        outfile=test_merged.fits columns=-
+\end{lstlisting}
+ 
+The merged event-file can then be used for the deconvolution and reconstruction of the sky image. For this a python3 script can be provided, which requires the source position for the generation of spectra and light-curves and prefix for the output files names. Default ARF and RMF paths are assumed but mostly likely specific paths to need to be supplied as input parameters. A minimal example can be seen below:
+
+\begin{lstlisting}[language=bash]
+  ./deconvolve.py 
+      --ra_src 250 --dec_src -50 
+      --outfile "test"    
+      --infile "test_merged.fits"
+\end{lstlisting}
+
+Running \sixte results in the detector and reconstructed sky image show in Fig.~\ref{fig:ss_det_sky}. 
+For a more realistic representation of \xgis, we simulate a pointing towards the galactic center based on the INTEGRAL reference catalog.
+The detector and sky image are shown in the Fig.~\ref{fig:gc_det_sky}. 
+
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{imgs/det_1source.png}
+  \includegraphics[width=0.49\textwidth]{imgs/sky_1source.png}
+  \caption{
+    The detector image (left) and the reconstructed sky image (right) for a simulation with a single off-axis source.
+  } \label{fig:ss_det_sky}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{imgs/det_gcero.png}
+  \includegraphics[width=0.49\textwidth]{imgs/sky_gpero.png}
+  \caption{The detector image (left) and the reconstructed sky image (right) for a simulation of the galactic center.
+  The detector image shows the shadow pattern cast by the coded mask, while the sky image shows the reconstructed source distribution.}
+  \label{fig:gc_det_sky}
+\end{figure}
+
+
+The tool \textit{deconvolve.py}  also generates light-curves and spectra for a specific sources position. For this the deconvolution is performed for each spectral channel and  \textit{nbins} time bins. Appropriate header keywords pointing towards the response files are set, such that the pha-file can be used an any spectral fitting software, such as ISIS or XSPEC. Systematic uncertainties of a few percent might be needed for satisfactory fits.  Since the reconstruction algorithm has to run many times for spectra and light-curve extraction this is the slowest part of the script. For a faster generation of sky images the keywords  \textit{no\_spe} and \textit{no\_lc} can be used. The final image will be saves as a FITS file and supplies with WCS coordinates. In the current iteration this step assumes that the roll angle of the telescope is aligned with the equatorial coordinate grid, i.e., x-z coordinates are aligned with RA-DEC.  Fig.~\ref{fig:lc_spec} shows the extracted light-curve and spectrum for a simulated GRB with a flux of $10^{-6}$ erg/s/cm$^2$. 
+
+\begin{figure}
+\includegraphics[width=0.49\textwidth]{imgs/lc.png}
+\includegraphics[width=0.49\textwidth]{imgs/spec.png}
+\caption{Light-curve and spectrum for a simulated GRB at the very beginning of a 10\,ks observation} \label{fig:lc_spec}
+\end{figure}
+
+\end{document}
