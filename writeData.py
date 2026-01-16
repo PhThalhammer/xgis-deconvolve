@@ -29,7 +29,7 @@ def write_spectrum_file(filename, spec, exposure, arffile, rmffile):
 
     primary_hdu = fits.PrimaryHDU()
     hdul = fits.HDUList([primary_hdu, bintable_hdu])
-
+    
     hdul.writeto(filename, overwrite=True)
     hdul.close()
     return 1
@@ -71,7 +71,7 @@ def write_img_file(filename, data, ra, dec):
     # Writing image file with WCS header
     da = 50.0  # total angular size in degrees
     # angular size of one pixel and 
-    dp = (0.5 / 63.0) * (180 / np.pi)  # pixel scale in degrees;
+    dp = (0.5 / 63.0) * (180 / np.pi)  # pixel scale in degrees for XGIS;
     data = np.fliplr(data)
     header = {'CTYPE1': 'RA---TAN',
            'CTYPE2': 'DEC--TAN',

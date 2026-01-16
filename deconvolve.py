@@ -7,6 +7,7 @@ import numpy as np
 from scipy import ndimage
 from astropy.io import fits 
 from astropy.wcs import WCS
+from astropy.coordinates import angular_separation
 
 # Local imports
 from writeData import write_img_file, write_spectrum_file, write_lc_file
@@ -53,11 +54,12 @@ Output Files:
     parser.add_argument('--infile', dest='infile', type=str, help='Path to the input FITS event file containing photon data.')
     parser.add_argument('--mask', dest='mask', type=str, default=home+"/userdata/coded_mask/theseus-xgis/instruments/theseus-xgis/instdata/msk_55_4752313.fits", help='Path to the mask FITS file.')
     parser.add_argument('--weight', dest='weight', type=str, default=home+"/userdata/coded_mask/weight/weight_di.fits", help='Path to the weight FITS file.')
-    parser.add_argument('--arf', dest='arf', type=str, default=home+"/userdata/coded_mask/theseus-xgis/instruments/theseus-xgis/instdata/XGIS_X_theta_0_phi_0.arf", help='Path to the ARF file.')
-    parser.add_argument('--rmf', dest='rmf', type=str, default=home+"/userdata/coded_mask/theseus-xgis/instruments/theseus-xgis/instdata/rmfgrid/xgis_x_theta_0_phi_0_sixte_20251029.rmf", help='Path to the RMF file.')
+    parser.add_argument('--arf', dest='arf', type=str, default=home+"/userdata/coded_mask/theseus-xgis/instruments/theseus-xgis/instdata/arfgrid/", help='Path to the ARF files provided with the instrument files.')
+    parser.add_argument('--rmf', dest='rmf', type=str, default=home+"/userdata/coded_mask/theseus-xgis/instruments/theseus-xgis/instdata/rmfgrid/", help='Path to the RMF files provided with the instrument files.')
     parser.add_argument('--no_lc', dest='no_lc', action='store_true', help='Do not generate lightcurve.')
     parser.add_argument('--no_sp', dest='no_sp', action='store_true', help='Do not generate spectrum.')
-    parser.add_argument('--nbins', dest='nbins', default=100, help='Number of bins for the light-curve.')
+    parser.add_argument('--nbins', dest='nbins',  type=int,  default=100, help='Number of bins for the light-curve.')
+    parser.add_argument('--nsample', dest='nsample', default=1, type=int, help='Factor of spacial oversampling for reconstruction.')
          
     args = parser.parse_args()
 
@@ -74,7 +76,7 @@ Output Files:
         return reconst_new(mask,img,w)  
         return full_reconstruction(mask,img,w) 
             
-    dpixel = 5e-3   # pixel size in m
+    dpixel = 5e-3   # pixel size in mNumber of bins for the light-curve.
     dmask = 0.63  # mask distance win m
     da = dpixel / dmask * (180/np.pi) # angular pixel size in deg
     # - - - - - - - - - - - - - - - - - - 
@@ -84,7 +86,7 @@ Output Files:
         mask = img_hdu.data.astype(float) # Ensure float for calculations
     
     # Resample mask to match pixel size
-    mask = ndimage.zoom(mask, 2, order=0)
+    mask = ndimage.zoom(mask, 2*args.nsample, order=0)
     mask = np.transpose(mask)
     shape = mask.shape
 
@@ -155,13 +157,21 @@ Output Files:
             emids[i] = .5*( e_edges[i]+e_edges[i+1] )
 
         # Save as a phafile 
+        
+        # Pick thre right rmf
+        theta = np.arctan2(y,x) * 180/np.pi 
+        phi = angular_separation(ra*np.pi/180,dec*np.pi/180, args.ra_src*np.pi/180, args.dec_src*np.pi/180) * 180/np.pi
+        print("Theta (deg): ", theta)
+        print("Phi (deg): ", phi)
 
-        arffile = args.arf
-        rmffile = args.rmf
+        # XGIS_X_theta_30_phi_45.arf theta in 15 deg steps and phi as 0 or 45 deg 
+        arffile = args.arf +"/XGIS_X_theta_"+str(int(round(theta/15)*15))+"_phi_"+str(int(round(phi/45)*45))+".arf"
+        rmffile = args.rmf +"/xgis_x_theta_"+str(int(round(theta/15)*15))+"_phi_"+str(int(round(phi/45)*45))+"_sixte_20251029.rmf"
 
         write_spectrum_file(args.outfile + "_spec.pha", spec, exposure, arffile, rmffile)
 
     # Generating a lightcurve
+    print("Extracting lightcurve...")
     if not args.no_lc:
         nlc = args.nbins
         emin = 0
