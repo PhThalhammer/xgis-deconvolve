@@ -105,7 +105,12 @@ Output Files:
         cols = tmp[1].columns
         data = tmp[1].data
 
-    img = make_img(data)
+    print("Making detector image..")
+    tstart  = min(data['TIME'])
+    tstop =  max(data['TIME'])
+    tstop = tstart + .1* (tstop -tstart)
+    img = make_img(data, tmin=tstart, tmax=tstop)
+    print("Making sky image..");
     sky = recon(mask, img, weight)
     write_img_file(args.outfile + "_sky.fits", np.flipud(sky), ra, dec);
 
@@ -176,10 +181,10 @@ Output Files:
         nlc = args.nbins
         emin = 0
         emax = 57
-        minT = int(np.min(data['TIME']))
-        maxT = int(np.max(data['TIME']))
+        minT = np.min(data['TIME'])
+        maxT = np.max(data['TIME'])
         # create nlcs time bins using linspace (nlc bins)
-        t_edges = np.linspace(minT, maxT, nlc + 1).astype(int)
+        t_edges = np.linspace(minT, maxT, nlc + 1)
         # ensure unique and sorted
         t_edges = np.unique(t_edges)
 
