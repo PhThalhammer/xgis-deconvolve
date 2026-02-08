@@ -73,6 +73,18 @@ Matrix2D pad_array(const Matrix2D& input, size_t new_rows, size_t new_cols) {
     return output;
 }
 
+Matrix2D pad_asym(const Matrix2D& input, size_t pad_before, size_t pad_after) {
+    size_t new_rows = pad_before + input.rows + pad_after;
+    size_t new_cols = pad_before + input.cols + pad_after;
+    Matrix2D output(new_rows, new_cols, 0.0);
+    for (size_t r = 0; r < input.rows; ++r) {
+        for (size_t c = 0; c < input.cols; ++c) {
+            output(r + pad_before, c + pad_after) = input(r, c);
+        }
+    }
+    return output;
+}
+
 Matrix2D crop_center(const Matrix2D& input, size_t target_rows, size_t target_cols) {
     Matrix2D output(target_rows, target_cols);
     size_t r_start = (input.rows - target_rows) / 2;

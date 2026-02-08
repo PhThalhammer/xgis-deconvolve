@@ -55,13 +55,17 @@ Matrix2D reconst_new(const Matrix2D& mask, const Matrix2D& det, const Matrix2D& 
     // axis 1 target size: mask.cols
     
     // Pad det
-    Matrix2D detpad = pad_array(det, matg, mask.cols);
+    size_t p1_det = (matg - det.rows) / 2;
+    size_t p2_det = (mask.cols - det.cols) / 2;
+    Matrix2D detpad = pad_asym(det, p1_det, p2_det);
     // Pad w
-    Matrix2D wpad = pad_array(w, matg, mask.cols);
+    Matrix2D wpad = pad_asym(w, p1_det, p2_det);
     // Pad gp
-    Matrix2D gppad = pad_array(gp, matg, mask.cols);
+    size_t p1_mask = (matg - mask.rows) / 2;
+    size_t p2_mask = (mask.cols - mask.cols) / 2;
+    Matrix2D gppad = pad_asym(gp, p1_mask, p2_mask);
     // Pad gm
-    Matrix2D gmpad = pad_array(gm, matg, mask.cols);
+    Matrix2D gmpad = pad_asym(gm, p1_mask, p2_mask);
     
     // detw = detpad * wpad
     Matrix2D detw(detpad.rows, detpad.cols);

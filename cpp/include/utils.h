@@ -86,6 +86,7 @@ Matrix2D ccf_fft_2d(const Matrix2D& img, const Matrix2D& kernel);
 
 // Helpers for array manipulation
 Matrix2D pad_array(const Matrix2D& input, size_t new_rows, size_t new_cols);
+Matrix2D pad_asym(const Matrix2D& input, size_t pad_before, size_t pad_after);
 Matrix2D crop_center(const Matrix2D& input, size_t target_rows, size_t target_cols);
 void flipud(Matrix2D& mat);
 void fliplr(Matrix2D& mat);
