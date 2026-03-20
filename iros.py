@@ -97,6 +97,50 @@ def CCF2Df_fft(image_matrix, kernel_matrix, desired_output_shape):
     return ccf_map_final[start_r : start_r + out_r, start_c : start_c + out_c]
 
 
+
+def reconst_short(mask, det ,w): 
+    # Input & Initialisation
+    # What is hte size of det and what is the totdal size of w 
+    
+    maskpad = np.zeros((201, 201), dtype=np.int32)
+    maskpad[45:155, 45:155] = mask
+    
+    gp = np.zeros_like(maskpad, dtype=float)
+    gp[maskpad > 0.5] = 1.0
+    
+    gm = np.zeros_like(maskpad, dtype=float)
+    gm[maskpad <= 0.5] = -1.0
+    
+    
+    
+    detpad = np.zeros((201, 201), dtype=np.int32)
+    detpad[55:145, 55:145] = det
+    
+    wpad = np.zeros((201, 201), dtype=np.int32)
+    wpad[55:145, 55:145] = w
+    
+    
+    detw = detpad * wpad
+    
+    # IDL's FFT(..., -1) is the forward transform.
+    fftgp = np.fft.fft2(gp)
+    fftgm = np.fft.fft2(gm)
+    fftw = np.fft.fft2(wpad)
+    
+    # Sky computation
+    fftdetw = np.fft.fft2(detw)
+    
+    gpw = np.fft.fftshift(np.real(np.fft.ifft2(fftgp * np.conj(fftw))))
+    gmw = np.fft.fftshift(np.real(np.fft.ifft2(fftgm * np.conj(fftw))))
+    detwgp = np.fft.fftshift(np.real(np.fft.ifft2(fftgp * np.conj(fftdetw))))
+    detwgm = np.fft.fftshift(np.real(np.fft.ifft2(fftgm * np.conj(fftdetw))))
+    
+    eps =0.0
+    b = (gpw - 1) / ( gmw +eps)
+    sky = detwgp  - b * detwgm
+    norm = (201*201)
+    return sky  * norm
+
 def reconst_new(mask, det, w):
  # mask needs to contain only 0 or 1 
     

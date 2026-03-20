@@ -11,7 +11,7 @@ from astropy.coordinates import angular_separation
 
 # Local imports
 from writeData import write_img_file, write_spectrum_file, write_lc_file
-from iros import reconst_new, make_img
+from iros import reconst_new, make_img, reconst_short
 
 def main():
     # Parsing input parameters: 
@@ -73,9 +73,11 @@ Output Files:
             sys.exit(1)
 
     def recon (mask, img, w):           
-        return reconst_new(mask,img,w)  
-        return full_reconstruction(mask,img,w) 
-            
+#        return reconst_new(mask,img,w)  
+#        return full_reconstruction(mask,img,w) 
+        return reconst_short(mask,img,w) 
+         
+    
     dpixel = 5e-3   # pixel size in mNumber of bins for the light-curve.
     dmask = 0.63  # mask distance win m
     da = dpixel / dmask * (180/np.pi) # angular pixel size in deg
@@ -113,10 +115,12 @@ Output Files:
     print("Making sky image..");
     sky = recon(mask, img, weight)
     write_img_file(args.outfile + "_sky.fits", np.flipud(sky), ra, dec);
-
+    print ("Pointing directing = ", ra, dec)
     # Mark a source position 
     # TODO add check wether source and pointing are less then 180 deg apart
     W = WCS(args.outfile + "_sky.fits")
+    print(W) 
+    print("Given source position = ", args.ra_src, args.dec_src)
     x,y = W.world_to_pixel_values(args.ra_src, args.dec_src)
     x = int(x)
     y = int(y)
@@ -164,8 +168,8 @@ Output Files:
         # Save as a phafile 
         
         # Pick thre right rmf
-        theta = np.arctan2(y,x) * 180/np.pi 
-        phi = angular_separation(ra*np.pi/180,dec*np.pi/180, args.ra_src*np.pi/180, args.dec_src*np.pi/180) * 180/np.pi
+        phi = np.arctan2(y,x) * 180/np.pi 
+        theta = angular_separation(ra*np.pi/180,dec*np.pi/180, args.ra_src*np.pi/180, args.dec_src*np.pi/180) * 180/np.pi
         print("Theta (deg): ", theta)
         print("Phi (deg): ", phi)
 
@@ -196,7 +200,7 @@ Output Files:
             tmax_i = t_edges[i + 1]
             im = make_img(data, emin=emin, emax=emax, tmin=tmin_i, tmax=tmax_i)
             im = np.nan_to_num(im, nan=0.0)
-            sky = reconst_new(mask, im, weight)
+            sky = recon(mask, im, weight)
             sky = np.nan_to_num(sky, nan=0.0)
             x_min = max(0, x - 10)                                                       
             x_max = min(sky.shape[1], x + 10) # Note: x is column (index 1)  
